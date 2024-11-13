@@ -4,16 +4,17 @@ import {
   UseFetchConfig,
   UseFetchResult,
   FetchResponse,
+  RequestConfig,
 } from './types'
-import { createRequest, isAxiosError } from '../helpers'
+import { createRequest, extractErrorMessage, isAxiosError } from '../helpers'
 
-export function useFetch<TData = unknown, TParams = any>({
+export function useFetch<TData = unknown, TParams = void>({
   request,
   callback,
   fetchOnInit = false,
   onError,
   client = axios,
-}: UseFetchConfig<TData, TParams>): UseFetchResult<TData> {
+}: UseFetchConfig<TData, TParams>): UseFetchResult<TData, TParams> {
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<TData>()
   const [error, setError] = useState<string>()
@@ -29,11 +30,12 @@ export function useFetch<TData = unknown, TParams = any>({
       if (typeof request === 'function') {
         response = await request()
       } else {
-        const configWithParams = {
-          ...request,
-          params: { ...request.params, ...params },
-        }
-        response = await createRequest<TData, TParams>(configWithParams, client)
+        const configWithParams = params ? { ...request, params } : request
+
+        response = await createRequest<TData, TParams>(
+          configWithParams as RequestConfig<TParams>,
+          client,
+        )
       }
 
       const isSuccess = response.status >= 200 && response.status < 300
@@ -44,7 +46,7 @@ export function useFetch<TData = unknown, TParams = any>({
       const result: FetchResponse<TData> = {
         isSuccess,
         data: response.data,
-        error: isSuccess ? undefined : response.statusText,
+        error: isSuccess ? undefined : extractErrorMessage(response),
         status: response.status,
         statusText: response.statusText,
       }
@@ -52,23 +54,24 @@ export function useFetch<TData = unknown, TParams = any>({
       callback?.(result)
 
       if (!isSuccess) {
-        const errorMessage =
-          response.data?.message || response.statusText || 'Request failed'
+        const errorMessage = extractErrorMessage(response)
         setError(errorMessage)
         onError?.(new Error(errorMessage))
       }
     } catch (err) {
-      let errorMessage = 'Unknown error occurred'
+      let errorMessage: string
 
       if (isAxiosError(err)) {
-        errorMessage = err.response?.data?.message || err.message
+        errorMessage = extractErrorMessage(err.response) || err.message
         setStatus(err.response?.status)
       } else if (err instanceof Error) {
         errorMessage = err.message
+      } else {
+        errorMessage = 'Unknown error occurred'
       }
 
       setError(errorMessage)
-      onError?.(err)
+      onError?.(err instanceof Error ? err : new Error(errorMessage))
 
       callback?.({
         isSuccess: false,
@@ -87,21 +90,10 @@ export function useFetch<TData = unknown, TParams = any>({
   }, [])
 
   return {
-    fetch: handleFetch,
+    fetch: handleFetch as UseFetchResult<TData, TParams>['fetch'],
     loading,
     data,
     error,
     status,
   }
-}
-
-export const createApiClient = (
-  baseURL: string,
-  options: Record<string, any> = {},
-) => {
-  return axios.create({
-    baseURL,
-    timeout: 10000,
-    ...options,
-  })
 }

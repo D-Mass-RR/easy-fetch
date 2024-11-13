@@ -1,42 +1,54 @@
-import axios, {AxiosError, AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios'
 
-export type HttpClient = AxiosInstance | typeof axios;
+export type HttpClient = AxiosInstance | typeof axios
 
-export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
-interface BaseRequestConfig {
+export interface BaseRequestConfig {
   url: string;
   method?: RequestMethod;
   headers?: Record<string, string>;
   data?: any;
+  params?: never; // явно запрещаем params в базовом конфиге
 }
 
-export type RequestConfig<TParams = void> = BaseRequestConfig & {
-  params?: TParams extends void ? never : TParams;
+export type RequestConfig<TParams = void> = TParams extends void
+    ? BaseRequestConfig
+    : Omit<BaseRequestConfig, 'params'> & {
+  params?: TParams;
 };
 
-export interface FetchResponse<TData = unknown> {
-  isSuccess: boolean;
-  data?: TData;
-  error?: string;
-  status?: number;
-  statusText?: string;
+export interface ErrorResponse {
+  message: string
+  [key: string]: any
 }
 
-export type FetchCallback<TData = unknown> = (response: FetchResponse<TData>) => void;
+export interface FetchResponse<TData = unknown> {
+  isSuccess: boolean
+  data?: TData
+  error?: string
+  status?: number
+  statusText?: string
+}
 
-export interface UseFetchConfig<TData = unknown, TParams = any> {
+export type FetchCallback<TData = unknown> = (
+  response: FetchResponse<TData>,
+) => void
+
+export interface UseFetchConfig<TData = unknown, TParams = void> {
   request: RequestConfig<TParams> | (() => Promise<AxiosResponse<TData>>);
   callback?: FetchCallback<TData>;
   fetchOnInit?: boolean;
-  onError?: (error: AxiosError | Error) => void;
+  onError?: (error: unknown) => void;
   client?: HttpClient;
 }
 
-export interface UseFetchResult<TData = unknown> {
-  fetch: (params?: any) => Promise<void>;
-  loading: boolean;
-  data?: TData;
-  error?: string;
-  status?: number;
+export interface UseFetchResult<TData = unknown, TParams = void> {
+  fetch: TParams extends void
+    ? () => Promise<void>
+    : (params: TParams) => Promise<void>
+  loading: boolean
+  data?: TData
+  error?: string
+  status?: number
 }

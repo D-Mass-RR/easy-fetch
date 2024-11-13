@@ -1,5 +1,6 @@
-import { createApiClient, useFetch } from '../src/hooks/useFetch'
+import { useFetch } from '../src/hooks/useFetch'
 import { FetchResponse } from '../src/hooks/types'
+import createApiClient from '../src/createApiClient'
 
 const token = ''
 
