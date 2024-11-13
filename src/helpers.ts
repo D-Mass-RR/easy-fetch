@@ -1,3 +1,6 @@
+import { AxiosError, AxiosResponse } from "axios"
+import {HttpClient, RequestConfig } from "./hooks/types"
+
 const isAxiosError = (error: any): error is AxiosError => {
   return error?.isAxiosError === true
 }
@@ -15,4 +18,9 @@ const createRequest = <TData = unknown, TParams = any>(
     data,
     headers,
   })
+}
+
+export {
+  createRequest,
+  isAxiosError
 }
