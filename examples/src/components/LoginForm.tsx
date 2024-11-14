@@ -1,20 +1,62 @@
 import React, { useState } from 'react'
+import { useFetch } from 'easy-fetch'
+import { apiClient } from '../api/client'
+import { LoginResponse } from '../api/types'
 import './styles.css'
 
 interface FormData {
-  email: string;
+  username: string;
   password: string;
 }
 
 const LoginForm = () => {
   const [formData, setFormData] = useState<FormData>({
-    email: '',
+    username: '',
     password: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { fetch: login, loading, error, data } = useFetch<LoginResponse, void>({
+    request: {
+      url: '/auth/login',
+      method: 'POST',
+      data: {
+        ...formData,
+        expiresInMins: 30,
+      },
+    },
+    client: apiClient,
+    callback: ({ isSuccess, data, error }) => {
+      if (isSuccess && data) {
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify({
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        }))
+        window.location.href = '/dashboard'
+      } else {
+        console.error('Login failed:', error)
+      }
+    },
+    onError: (err) => {
+      console.error('Login error:', err)
+    },
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
+
+    if (!formData.username.trim() || !formData.password.trim()) {
+      return
+    }
+
+    try {
+      await login()
+    } catch (err) {
+      console.error('Unexpected error:', err)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,13 +79,14 @@ const LoginForm = () => {
           <div className="input-group">
             <div className="input-field">
               <input
-                type="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
                 required
-                placeholder="Email address"
+                placeholder="Username"
                 className="input-with-icon email-icon"
+                disabled={loading}
               />
               <span className="input-focus-border"></span>
             </div>
@@ -57,14 +100,35 @@ const LoginForm = () => {
                 required
                 placeholder="Password"
                 className="input-with-icon password-icon"
+                disabled={loading}
               />
               <span className="input-focus-border"></span>
             </div>
           </div>
 
-          <button type="submit" className="login-button">
-            Sign in
+          {error && (
+            <div className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '-0.5rem' }}>
+              {error}
+            </div>
+          )}
+
+          {data && (
+            <div className="success-message" style={{ color: '#22c55e', fontSize: '0.875rem', marginTop: '-0.5rem' }}>
+              Login successful! Redirecting...
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="login-button"
+            disabled={loading || !formData.username || !formData.password}
+          >
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
+
+          <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center', marginTop: '1rem' }}>
+            Try with: username: "kminchelle" / password: "0lelplR"
+          </div>
         </form>
       </div>
     </div>
