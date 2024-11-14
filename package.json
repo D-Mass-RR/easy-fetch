@@ -15,7 +15,7 @@
     "clean": "rm -rf dist",
     "prepare": "npm run build",
     "dev": "npm run build:watch",
-    "examples": "cd examples && npm start",
+    "examples": "cd examples && npm i && npm start",
     "prepack": "npm run build"
   },
   "dependencies": {

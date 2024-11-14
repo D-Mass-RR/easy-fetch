@@ -1,0 +1,1 @@
+{"version":3,"file":"createApiClient.js","sourceRoot":"","sources":["../src/createApiClient.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;AAAA,gDAAyB;AAEzB,IAAM,eAAe,GAAG,UACpB,OAAe,EACf,OAAiC;IAAjC,wBAAA,EAAA,YAAiC;IAEjC,OAAO,eAAK,CAAC,MAAM,YACf,OAAO,SAAA,EACP,OAAO,EAAE,KAAK,IACX,OAAO,EACZ,CAAA;AACN,CAAC,CAAA;AAED,kBAAe,eAAe,CAAA"}

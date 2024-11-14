@@ -33,7 +33,7 @@ const LoginForm = () => {
           <p>Please sign in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
             <div className="input-field">
               <input
@@ -45,6 +45,7 @@ const LoginForm = () => {
                 placeholder="Email address"
                 className="input-with-icon email-icon"
               />
+              <span className="input-focus-border"></span>
             </div>
 
             <div className="input-field">
@@ -57,6 +58,7 @@ const LoginForm = () => {
                 placeholder="Password"
                 className="input-with-icon password-icon"
               />
+              <span className="input-focus-border"></span>
             </div>
           </div>
 
